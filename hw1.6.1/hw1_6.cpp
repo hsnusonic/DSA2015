@@ -91,25 +91,30 @@ int gcd_by_euclid(const int& a, const int& b, int& count){
 
 int main(void){
   int a, b;
-  int count;
+  int ans, count;
   cin >> a;
   while (a > 0) {
     cin >> b;
     count = 0;
-    gcd_by_reverse_search(a, b, count);
-    cout << "Case (" << a << ", " << b << "): GCD-By-Reverse-Search = 1, taking " << count << " iterations" << endl;
+    ans = gcd_by_reverse_search(a, b, count);
+    cout << "Case (" << a << ", " << b << "): GCD-By-Reverse-Search = " << ans <<\
+      ", taking " << count << " iterations" << endl;
     count = 0;
-    gcd_by_filter(a, b, count);
-    cout << "Case (" << a << ", " << b << "): GCD-By-Filter = 1, taking " << count << " iterations" << endl;
+    ans = gcd_by_filter(a, b, count);
+    cout << "Case (" << a << ", " << b << "): GCD-By-Filter = " << ans <<\
+      ", taking " << count << " iterations" << endl;
     count = 0;
-    gcd_by_filter_faster(a, b, count);
-    cout << "Case (" << a << ", " << b << "): GCD-By-Filter-Faster = 1, taking " << count << " iterations" << endl;
+    ans = gcd_by_filter_faster(a, b, count);
+    cout << "Case (" << a << ", " << b << "): GCD-By-Filter-Faster = " << ans <<\
+      ", taking " << count << " iterations" << endl;
     count = 0;
-    gcd_by_binary(a, b, count);
-    cout << "Case (" << a << ", " << b << "): GCD-By-Binary = 1, taking " << count << " iterations" << endl;
+    ans = gcd_by_binary(a, b, count);
+    cout << "Case (" << a << ", " << b << "): GCD-By-Binary = " << ans <<\
+      ", taking " << count << " iterations" << endl;
     count = 0;
-    gcd_by_euclid(a, b, count);
-    cout << "Case (" << a << ", " << b << "): GCD-By-Euclid = 1, taking " << count << " iterations" << endl;
+    ans = gcd_by_euclid(a, b, count);
+    cout << "Case (" << a << ", " << b << "): GCD-By-Euclid = " << ans <<\
+      ", taking " << count << " iterations" << endl;
     cin >> a;
   }
   return 0;
