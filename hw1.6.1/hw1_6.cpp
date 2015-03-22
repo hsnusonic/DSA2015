@@ -1,7 +1,38 @@
 #include <iostream>
-#include <stdio.h>
 
-int gcd_by_binary(const int& a, int& b){
+using namespace std;
+
+int gcd_by_reverse_search(const int& a, const int& b){
+  for (int i = a < b ? a : b; i >= 1; i--){
+    if (a % i == 0 && b % i == 0)
+      return i;
+  }
+  return 0;
+}
+
+int gcd_by_filter(const int& a, const int& b){
+  int min = a < b ? a : b;
+  for (int i = 2; i <= min; i++){
+    if (a % i == 0 && b % i == 0)
+      return i * gcd_by_filter(a/i, b/i);
+  }
+  return 1;
+}
+
+int gcd_by_filter_faster_internal(const int& a, const int& b, int s){
+  int min = a < b ? a : b;
+  for (int i = s; i <= min; i++){
+    if (a % i == 0 && b % i == 0)
+      return i * gcd_by_filter_faster_internal(a/i, b/i, i);
+  }
+  return 1;
+}
+
+int gcd_by_filter_faster(const int& a, const int& b){
+  return gcd_by_filter_faster_internal(a, b, 2);
+}
+
+int gcd_by_binary(const int& a, const int& b){
   int n, m;
   int ans = 1;
 
@@ -33,7 +64,7 @@ int gcd_by_binary(const int& a, int& b){
   return (n * ans);
 }
 
-int gcd_by_euclid(const int& a, int& b){
+int gcd_by_euclid(const int& a, const int& b){
   int n, m;
 
   if (a < b){
@@ -55,11 +86,15 @@ int gcd_by_euclid(const int& a, int& b){
 
 int main(void){
   int a, b;
-  scanf("%d %d", &a, &b);
-  while (a > 0 && b > 0) {
-    printf("gcd_by_binary is %d\n", gcd_by_binary(a, b));
-    printf("gcd_by_euclid is %d\n", gcd_by_euclid(a, b));
-    scanf("%d %d", &a, &b);
+  cin >> a;
+  while (a > 0) {
+    cin >> b;
+    cout << "Case (" << a << ", " << b << "): GCD-By-Reverse-Search = 1, taking " << gcd_by_reverse_search(a,b) << " iterations" << endl;
+    cout << "Case (" << a << ", " << b << "): GCD-By-Filter = 1, taking " << gcd_by_filter(a,b) << " iterations" << endl;
+    cout << "Case (" << a << ", " << b << "): GCD-By-Filter-Faster = 1, taking " << gcd_by_filter_faster(a,b) << " iterations" << endl;
+    cout << "Case (" << a << ", " << b << "): GCD-By-Binary = 1, taking " << gcd_by_binary(a,b) << " iterations" << endl;
+    cout << "Case (" << a << ", " << b << "): GCD-By-Euclid = 1, taking " << gcd_by_euclid(a,b) << " iterations" << endl;
+    cin >> a;
   }
   return 0;
 }
