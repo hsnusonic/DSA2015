@@ -7,244 +7,168 @@
 using namespace std;
 
 BigInteger::BigInteger(const int& a) {
-  int mod = a / Base;
-  IntegerArray[0] = a % Base;
-  ArrayLength = 1;
-  while (mod > 0){
-    IntegerArray[ArrayLength] = mod;
-    ArrayLength ++;
-    mod = mod / Base;
+  int Q = a;
+  for (int i = 0; Q != 0; i++) {
+    IntegerArray[i] = Q % Base;
+    Q /= Base;
   }
+  (*this).refreshdigit();
 }
 
 BigInteger::BigInteger(const string& str) {
-  ArrayLength = (str.size() % 4)? str.size()/4+1 : str.size()/4;
-  int length = str.size();
-  for (int i = 0; i < ArrayLength; i++){
-    if (length > 4)
-      IntegerArray[i] = stoi( str.substr( length -= 4, 4) );
-    else
-      IntegerArray[i] = stoi( str.substr(0, length) );
+  int len = str.size();
+  for (int i = 0; i < len; ++i) {
+    IntegerArray[i] = str[len-i-1] - '0';
   }
+  (*this).refreshdigit();
 }
 
 BigInteger::BigInteger(const BigInteger& big) {
-  ArrayLength = big.ArrayLength;
-  for (int i = 0; i < ArrayLength; i++)
+  digit = big.digit;
+  for (int i = 0; i <= digit; i++)
     IntegerArray[i] = big.IntegerArray[i];
 }
 
 bool BigInteger::operator<(const BigInteger& big) const {
-  if (ArrayLength == big.ArrayLength){
-    int digit = ArrayLength - 1;
-    while (IntegerArray[digit] == big.IntegerArray[digit] && digit > 0)
-      digit--;
-    return IntegerArray[digit] < big.IntegerArray[digit];
+  if (digit == big.digit) {
+    for (int i = digit-1; i >= 0; i--) {
+      if (IntegerArray[i] != big.IntegerArray[i])
+        return IntegerArray[i] < big.IntegerArray[i];
+    }
+    return false;
   }
-  else if (ArrayLength > big.ArrayLength)
+  else if (digit > big.digit)
     return false;
   else
     return true;
+}
+
+void BigInteger::refreshdigit() {
+  digit = 0;
+  for (int i = 511; i >= 0; i--) {
+    if (IntegerArray[i]) {
+      digit = i + 1;
+      break;
+    }
+  }
 }
 
 bool BigInteger::operator==(const BigInteger& big) const {
-  if (ArrayLength != big.ArrayLength)
-    return false;
-  else{
-    for (int i = 0; i < ArrayLength; i++){
+  if (digit == big.digit) {
+    for (int i = 0; i < digit; i++) {
       if (IntegerArray[i] != big.IntegerArray[i])
         return false;
     }
-  }
-  return true;
-}
-
-bool BigInteger::operator<=(const BigInteger& big) const {
-  if ((*this) < big || (*this) == big)
     return true;
-  else
-    return false;
-}
-
-const BigInteger BigInteger::operator+(const BigInteger& big) const{
-  BigInteger out;
-  int upper = big.ArrayLength;
-  if ((*this) < big)
-    upper = big.ArrayLength;
-  else
-    upper = ArrayLength;
-
-  for (int i = 0; i < upper; i++){
-    int plus = IntegerArray[i] + big.IntegerArray[i];
-    if (plus >= Base){
-      out.IntegerArray[i+1] = 1;
-      out.IntegerArray[i] = plus - Base;
-      out.ArrayLength = i + 2;
-    } else {
-      out.IntegerArray[i] = plus;
-      out.ArrayLength = i + 1;
-    }
   }
-  return out;
+  return false;
 }
 
 const BigInteger BigInteger::operator-(const BigInteger& big) const{
   // suppose "big" is smaller
   BigInteger out;
   int compensate = 0;
-  for (int i = 0; i < big.ArrayLength; i++){
+  for (int i = 0; i < big.digit; i++){
     int newdigit = IntegerArray[i] - compensate;
     if (newdigit < big.IntegerArray[i]){
       out.IntegerArray[i] = Base + newdigit - big.IntegerArray[i];
       compensate = 1;
-      out.ArrayLength = i+1;
     } else {
-      out.IntegerArray[i] = IntegerArray[i] - compensate - big.IntegerArray[i];
+      out.IntegerArray[i] = newdigit - big.IntegerArray[i];
       compensate = 0;
-      if (out.IntegerArray[i])
-        out.ArrayLength = i+1;
     }
   }
-  for (int i = big.ArrayLength; i < ArrayLength; i++){
+  for (int i = big.digit; i < digit; i++){
     int newdigit = IntegerArray[i] - compensate;
     if (newdigit < 0){
       out.IntegerArray[i] = Base + newdigit;
       compensate = 1;
-      out.ArrayLength = i+1;
-    } else if (newdigit > 0){
+    } else {
       out.IntegerArray[i] = newdigit;
-      out.ArrayLength = i+1;
       compensate = 0;
     }
   }
+  out.refreshdigit();
   return out;
 }
 
 const BigInteger BigInteger::operator*(const BigInteger& big) const{
   BigInteger out;
   int product;
-  for (int i = 0; i < ArrayLength; i++){
-    for (int j = 0; j < big.ArrayLength; j++){
+  for (int i = 0; i < digit; i++){
+    for (int j = 0; j < big.digit; j++){
       product = IntegerArray[i] * big.IntegerArray[j];
-      if (product >= Base){
-        out.IntegerArray[i+j] += (product % Base);
-        out.IntegerArray[i+j+1] += (product / Base);
-        if ((i+j+2) > out.ArrayLength)
-          out.ArrayLength = i+j+2;
-      } else {
-        out.IntegerArray[i+j] += product;
-        if ((i+j+1) > out.ArrayLength)
-          out.ArrayLength = i+j+1;
-      }
+      out.IntegerArray[i+j] += (product % Base);
+      out.IntegerArray[i+j+1] += (product / Base);
     }
   }
+  out.refreshdigit();
+  out.calculate();
   return out;
-}
-
-const BigInteger BigInteger::degrade(int digit) const{
-  BigInteger out;
-  if (ArrayLength > digit){
-    out.ArrayLength = ArrayLength - digit;
-    for (int i = 0; i < out.ArrayLength; i++){
-      out.IntegerArray[i] = IntegerArray[i+digit];
-    }
-  }
-  return out;
-}
-/*
-const BigInteger BigInteger::upgrade(int digit) const{
-  // input digit to mutiply
-  BigInteger out;
-  out.IntegerArray[digit] = IntegerArray[0];
-  if (digit >0)
-    out.ArrayLength = digit + 1;
-  return out;
-}
-*/
-BigInteger& BigInteger::operator/=(int a) {
-  int i = ArrayLength - 1;
-  int divide = IntegerArray[i] / a;
-  int mod = IntegerArray[i] % a;
-  if (!divide && i > 0) {
-    ArrayLength --;
-    IntegerArray[i] = divide;
-    IntegerArray[i-1] += Base * mod;
-  } else if (i>0){
-    IntegerArray[i] = divide;
-    IntegerArray[i-1] += Base * mod;
-  } else {
-    IntegerArray[i] = divide;
-  }
-
-  for (i -= 1; i >= 0; i--){
-    divide = IntegerArray[i] / a;
-    mod = IntegerArray[i] % a;
-    if (divide && i > 0){
-      IntegerArray[i] = divide;
-      IntegerArray[i-1] += Base * mod;
-    } else if (divide && i==0){
-      IntegerArray[i] = divide;
-    }
-  }
-  return *this;
 }
 
 BigInteger& BigInteger::operator*=(int a) {
-  int product;
-  for (int i = 0; i < ArrayLength; i++){
-    product = IntegerArray[i] * a;
-    if (product >= Base){
-      IntegerArray[i] = product % Base;
-      IntegerArray[i+1] += (product / Base);
-      if ( (i+1) > ArrayLength)
-        ArrayLength = i + 1;
-    } else {
-      IntegerArray[i] = product;
-    }
-  }
+  BigInteger tmp(a);
+  (*this) = (*this) * tmp;
+  (*this).refreshdigit();
   return *this;
 }
 
 const BigInteger BigInteger::operator%(const BigInteger& big) const{
   // suppose "big" is smaller
+  BigInteger tmp;
+  int diff = digit - big.digit;
 
-  int upperbound = ArrayLength - big.ArrayLength;
-  BigInteger tmp = big.upgrade(upperbound);
-  while (tmp < (*this))
-    tmp *= 2;
-  cout << tmp << endl;
-  while ((*this) < tmp) {
-    tmp = tmp - big;
-    cout << tmp << endl;
+  for (int k = 0; k < (big.digit-1); k++) {
+    tmp.IntegerArray[k] += IntegerArray[diff + k +1];
+    tmp.refreshdigit();
   }
 
-  return (*this) - tmp;
+  for (int i = digit - big.digit; i >= 0; i--){
+    tmp *= Base;
+    tmp.IntegerArray[0] = IntegerArray[i];
+    tmp.refreshdigit();
+
+    while (big < tmp || big == tmp) {
+      tmp = tmp - big;
+    }
+  }
+
+  return tmp;
 }
 
 BigInteger& BigInteger::operator=(const BigInteger& big){
-  if ( (*this) < big){
-    for (int i = 0; i < big.ArrayLength; i++){
-      IntegerArray[i] = big.IntegerArray[i];
-    }
-  } else {
-    for (int i = 0; i < ArrayLength; i++){
-      IntegerArray[i] = big.IntegerArray[i];
-    }
+  for (int i = 0; i < big.digit; i++) {
+    IntegerArray[i] = big.IntegerArray[i];
   }
-  ArrayLength = big.ArrayLength;
+  if (digit > big.digit) {
+    for (int i = big.digit; i < digit; i++)
+     IntegerArray[i] = 0;
+  }
+  (*this).refreshdigit();
   return (*this);
 }
 
 bool BigInteger::iszero() const{
-  if (ArrayLength == 1 && IntegerArray[0] == 0)
-    return true;
-  else
-    return false;
+  return digit? false:true;
+}
+
+int BigInteger::getdigit() const{
+  return digit;
+}
+
+void BigInteger::calculate() {
+  for (int i = 0; i < digit; i++) {
+    if (IntegerArray[i] >= Base) {
+      IntegerArray[i+1] += IntegerArray[i] / Base;
+      IntegerArray[i] = IntegerArray[i] % Base;
+    }
+  }
+  (*this).refreshdigit();
 }
 
 ostream& operator<<(ostream& out, const BigInteger& a) {
-  out << a.IntegerArray[a.ArrayLength-1];
-  for (int i = a.ArrayLength-2; i >= 0; i--)
-      out << setw(4) << setfill('0') << a.IntegerArray[i];
+  for (int i = a.digit -1; i >= 0; i--)
+      out << setw(1) << setfill('0') << a.IntegerArray[i];
   return out;
 }
