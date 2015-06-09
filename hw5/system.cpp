@@ -90,5 +90,6 @@ int main(void) {
     }
   }
 
+  delete [] cms;
   return 0;
 }
